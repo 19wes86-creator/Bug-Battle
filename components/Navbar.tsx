@@ -31,7 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, currentView, setView, onLo
       <div className="max-w-6xl mx-auto h-full flex items-center justify-between px-4">
         <div className="hidden md:flex items-center gap-3 text-green-500">
           <Bug size={32} className="drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
-          <span className="text-2xl font-bold tracking-tighter font-['Orbitron']">BUG BATTLER</span>
+          <span className="text-2xl font-bold tracking-tighter font-['Orbitron']">BUG BATTLE</span>
         </div>
 
         <div className="flex-1 flex items-center justify-around h-full md:max-w-lg md:mx-auto">

@@ -1,5 +1,5 @@
 {
-  "name": "Bug Battler Arena",
+  "name": "Bug Battle",
   "description": "Upload photos of real bugs, have AI analyze their combat stats, and battle them against other players' bugs. Includes simulated authentication and leaderboard.",
   "requestFramePermissions": [
     "camera"

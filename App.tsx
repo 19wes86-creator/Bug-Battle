@@ -268,7 +268,7 @@ const App: React.FC = () => {
 
       <div className="bg-slate-900/80 backdrop-blur-xl border border-green-500/30 p-8 rounded-2xl w-full max-w-md relative z-10 shadow-[0_0_50px_rgba(34,197,94,0.1)]">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2 font-['Orbitron'] tracking-wider">BUG <span className="text-green-500">BATTLER</span></h1>
+          <h1 className="text-4xl font-bold text-white mb-2 font-['Orbitron'] tracking-wider">BUG <span className="text-green-500">BATTLE</span></h1>
           <p className="text-slate-400 text-sm">Upload. Analyze. Dominate.</p>
         </div>
 
