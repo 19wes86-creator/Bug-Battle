@@ -15,6 +15,9 @@ const useFirebase = firebaseConfig.apiKey && firebaseConfig.apiKey.length > 0;
 let auth: any;
 let db: any;
 
+// Local Storage Observers
+let localAuthObservers: ((user: User | null) => void)[] = [];
+
 if (useFirebase) {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
@@ -32,6 +35,10 @@ const getLocalBugs = (): Bug[] => {
 const getLocalUsers = (): User[] => {
   const stored = localStorage.getItem(USERS_DB_KEY);
   return stored ? JSON.parse(stored) : [];
+};
+
+const notifyLocalObservers = (user: User | null) => {
+  localAuthObservers.forEach(callback => callback(user));
 };
 
 // -- PUBLIC API (ASYNC) --
@@ -59,12 +66,17 @@ export const observeAuthState = (callback: (user: User | null) => void) => {
     });
   } else {
     // Local Storage implementation
+    localAuthObservers.push(callback);
     const checkSession = () => {
       const u = localStorage.getItem(SESSION_KEY);
       callback(u ? JSON.parse(u) : null);
     };
     checkSession();
-    return () => {}; // No-op unsubscribe
+    
+    // Return unsubscribe function
+    return () => {
+      localAuthObservers = localAuthObservers.filter(cb => cb !== callback);
+    };
   }
 };
 
@@ -121,10 +133,20 @@ export const registerUser = async (userData: User, password?: string): Promise<U
     if (users.some(u => u.email.toLowerCase() === userData.email.toLowerCase())) {
       throw new Error("Email already registered.");
     }
-    users.push(userData);
+    // Create new user
+    const newUser = { ...userData, id: Date.now().toString() };
+    if (password) {
+        (newUser as any).password = password;
+    }
+    
+    users.push(newUser);
     localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
-    localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
-    return Promise.resolve(userData);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
+    
+    // NOTIFY APP
+    notifyLocalObservers(newUser);
+    
+    return Promise.resolve(newUser);
   }
 };
 
@@ -140,7 +162,12 @@ export const authenticateUser = async (email: string, password?: string): Promis
     const users = getLocalUsers();
     const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
     if (!user) throw new Error("Invalid email or password.");
+    
     localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    
+    // NOTIFY APP
+    notifyLocalObservers(user);
+
     return Promise.resolve(user);
   }
 };
@@ -150,6 +177,8 @@ export const logoutUser = async (): Promise<void> => {
     await signOut(auth);
   } else {
     localStorage.removeItem(SESSION_KEY);
+    // NOTIFY APP
+    notifyLocalObservers(null);
     return Promise.resolve();
   }
 };
@@ -162,9 +191,11 @@ export const updateUserSession = async (user: User): Promise<void> => {
     const users = getLocalUsers();
     const index = users.findIndex(u => u.id === user.id);
     if (index !== -1) {
-      users[index] = user;
+      users[index] = { ...users[index], ...user }; // Merge updates
       localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
     }
+    // NOTIFY APP
+    notifyLocalObservers(user);
     return Promise.resolve();
   }
 };
